@@ -56,6 +56,31 @@ namespace Lidgren.Network
 					}
 				}
 			}
+			if (best == null)
+			{
+				// Allow NetworkInterfaceType Unknown
+				foreach (NetworkInterface adapter in nics)
+				{
+					if (adapter.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+						continue;
+					if (best == null)
+						best = adapter;
+					if (adapter.OperationalStatus != OperationalStatus.Up)
+						continue;
+
+					// make sure this adapter has any ipv4 addresses
+					IPInterfaceProperties properties = adapter.GetIPProperties();
+					foreach (UnicastIPAddressInformation unicastAddress in properties.UnicastAddresses)
+					{
+						if (unicastAddress != null && unicastAddress.Address != null && unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+						{
+							// Yes it does, return this network interface.
+							return adapter;
+						}
+					}
+				}
+			}
+
 			return best;
 		}
 
